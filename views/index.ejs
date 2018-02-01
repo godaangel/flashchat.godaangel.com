@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <input type="text" id="username" value="<%= username %>">
+    <input type="text" onchange="wsServer.onopen(this.value)">
+    <div id="chatbox"></div>
+   <script>
+    var username = document.getElementById('username').value;
+    var wsServer = new WebSocket('ws://127.0.0.1:3000/chat?username='+username);
+    
+    wsServer.onopen = function(e) {
+      var msg = JSON.stringify({msg: e, user: username});
+      (typeof e == 'string') && wsServer.send(msg); //向后台发送数据
+    };
+    wsServer.onclose = function(e) { //当链接关闭的时候触发
+      console.log(e);
+    };
+    wsServer.onmessage = function(e) { //后台返回消息的时候触发
+      console.log(e);
+      try{
+        var res = JSON.parse(e.data);
+        document.getElementById('chatbox').innerHTML += (res.user + ': ' + res.msg + '<br>');
+      }catch(err){
+        document.getElementById('chatbox').innerHTML += (e.data + '<br>');
+      }
+    };
+    wsServer.onerror = function(e) { //错误情况触发
+      console.log('error');
+    }
+
+    setTimeout(function(){
+      wsServer.onopen('进入啦');
+    },0);
+
+   </script>
+  </body>
+</html>
